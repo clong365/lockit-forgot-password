@@ -122,7 +122,7 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
   // looks like given email address has the correct format
 
   // look for user in db
-  adapter.find('email', email, function(err, user) {
+  adapter.findUser('email', email, function(err, user) {
     if (err) return next(err);
 
     // custom or built-in view
@@ -151,7 +151,7 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
     user.pwdResetTokenExpires = moment().add(timespan, 'ms').toDate();
 
     // update user in db
-    adapter.update(user, function(err, user) {
+    adapter.updateUser(user, function(err, user) {
       if (err) return next(err);
 
       // send email with forgot password link
@@ -199,7 +199,7 @@ ForgotPassword.prototype.getToken = function(req, res, next) {
   if (!re.test(token)) return next();
 
   // check if we have a user with that token
-  adapter.find('pwdResetToken', token, function(err, user) {
+  adapter.findUser('pwdResetToken', token, function(err, user) {
     if (err) return next(err);
 
     // if no user is found forward to error handling middleware
@@ -212,7 +212,7 @@ ForgotPassword.prototype.getToken = function(req, res, next) {
       delete user.pwdResetTokenExpires;
 
       // update user in db
-      adapter.update(user, function(err, user) {
+      adapter.updateUser(user, function(err, user) {
         if (err) return next(err);
 
         // send only JSON when REST is active
@@ -294,7 +294,7 @@ ForgotPassword.prototype.postToken = function(req, res, next) {
   }
 
   // check for token in db
-  adapter.find('pwdResetToken', token, function(err, user) {
+  adapter.findUser('pwdResetToken', token, function(err, user) {
     if (err) return next(err);
 
     // if no token is found forward to error handling middleware
@@ -307,7 +307,7 @@ ForgotPassword.prototype.postToken = function(req, res, next) {
       delete user.pwdResetTokenExpires;
 
       // update user in db
-      adapter.update(user, function(err, user) {
+      adapter.updateUser(user, function(err, user) {
         if (err) return next(err);
 
         // send only JSON when REST is active
@@ -343,7 +343,7 @@ ForgotPassword.prototype.postToken = function(req, res, next) {
       delete user.pwdResetTokenExpires;
 
       // update user in db
-      adapter.update(user, function(err, user) {
+      adapter.updateUser(user, function(err, user) {
         if (err) return next(err);
 
         // emit event
