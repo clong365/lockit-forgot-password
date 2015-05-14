@@ -102,7 +102,7 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
 
   // check for valid input
   if (!email || !email.match(EMAIL_REGEXP)) {
-    error = 'Email is invalid';
+    error = {code:'forgot.01'};
 
     // send only JSON when REST is active
     if (config.rest) return res.json(403, {error: error});
@@ -122,7 +122,7 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
   // looks like given email address has the correct format
 
   // look for user in db
-  adapter.findUser('email', email, function(err, user) {
+  adapter.find('email', email, function(err, user) {
     if (err) return next(err);
 
     // custom or built-in view
@@ -131,7 +131,9 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
     // no user found -> pretend we sent an email
     if (!user) {
       // send only JSON when REST is active
-      if (config.rest) return res.send(204);
+      //if (config.rest) return res.send(204);
+      //Frank
+      if (config.rest) return res.json(403,{code:'forgot.02'});
 
       res.render(view, {
         title: 'Forgot password',
@@ -151,7 +153,7 @@ ForgotPassword.prototype.postForgot = function(req, res, next) {
     user.pwdResetTokenExpires = moment().add(timespan, 'ms').toDate();
 
     // update user in db
-    adapter.updateUser(user, function(err, user) {
+    adapter.update(user, function(err, user) {
       if (err) return next(err);
 
       // send email with forgot password link
@@ -199,7 +201,7 @@ ForgotPassword.prototype.getToken = function(req, res, next) {
   if (!re.test(token)) return next();
 
   // check if we have a user with that token
-  adapter.findUser('pwdResetToken', token, function(err, user) {
+  adapter.find('pwdResetToken', token, function(err, user) {
     if (err) return next(err);
 
     // if no user is found forward to error handling middleware
@@ -212,11 +214,11 @@ ForgotPassword.prototype.getToken = function(req, res, next) {
       delete user.pwdResetTokenExpires;
 
       // update user in db
-      adapter.updateUser(user, function(err, user) {
+      adapter.update(user, function(err, user) {
         if (err) return next(err);
 
         // send only JSON when REST is active
-        if (config.rest) return res.json(403, {error: 'link expired'});
+        if (config.rest) return res.json(403, {error: {code:'forgot.03'}});
 
         // custom or built-in view
         var view = config.forgotPassword.views.linkExpired || join('link-expired');
@@ -275,7 +277,7 @@ ForgotPassword.prototype.postToken = function(req, res, next) {
 
   // check for valid input
   if (!password) {
-    error = 'Please enter a password';
+    error = {code:'forgot.04'};
 
     // send only JSON when REST is active
     if (config.rest) return res.json(403, {error: error});
@@ -294,7 +296,7 @@ ForgotPassword.prototype.postToken = function(req, res, next) {
   }
 
   // check for token in db
-  adapter.findUser('pwdResetToken', token, function(err, user) {
+  adapter.find('pwdResetToken', token, function(err, user) {
     if (err) return next(err);
 
     // if no token is found forward to error handling middleware
@@ -307,11 +309,11 @@ ForgotPassword.prototype.postToken = function(req, res, next) {
       delete user.pwdResetTokenExpires;
 
       // update user in db
-      adapter.updateUser(user, function(err, user) {
+      adapter.update(user, function(err, user) {
         if (err) return next(err);
 
         // send only JSON when REST is active
-        if (config.rest) return res.json(403, {error: 'link expired'});
+        if (config.rest) return res.json(403, {error: {code:'forgot.03'}});
 
         // custom or built-in view
         var view = config.forgotPassword.views.linkExpired || join('link-expired');
@@ -343,7 +345,7 @@ ForgotPassword.prototype.postToken = function(req, res, next) {
       delete user.pwdResetTokenExpires;
 
       // update user in db
-      adapter.updateUser(user, function(err, user) {
+      adapter.update(user, function(err, user) {
         if (err) return next(err);
 
         // emit event
